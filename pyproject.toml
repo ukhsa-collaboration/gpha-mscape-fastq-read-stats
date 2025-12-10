@@ -12,8 +12,8 @@ requires-python = ">=3.10"
 dependencies = ["pyfunctional>=1.5.0", "pytest>=8.2.2", "pyfastx>=2.2.0"]
 
 [project.urls]
-Homepage = "https://gitlab.phe.gov.uk/gpha/mscape/fastq_read_stats"
-Issues = "https://gitlab.phe.gov.uk/gpha/mscape/fastq_read_stats/-/issues"
+Homepage = "https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats"
+Issues = "https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats/issues"
 
 [project.scripts]
 fastq_read_stats = "fastq_read_stats.fastq_read_stats:main"
