@@ -5,11 +5,21 @@ import sys
 import argparse
 import functools
 import pyfastx
+import pandas as pd
+from pathlib import Path
+
 from functional import seq
 from typing import NamedTuple
 from collections import Counter
+from onyx import OnyxClient, OnyxConfig, OnyxEnv
+from onyx_analysis_helper import onyx_analysis_helper_functions as oa
 
-__version__ = "0.1.0"
+config = OnyxConfig(
+    domain=os.environ[OnyxEnv.DOMAIN],
+    token=os.environ[OnyxEnv.TOKEN],
+)
+
+__version__ = "0.2.0"
 
 
 class QualityStats(NamedTuple):
@@ -153,20 +163,43 @@ def parse_seq_and_get_quality_stats(input_filepath: str) -> None:
         sys.stdout.write("\n")
 
 
-def init_argparser():
+@oa.call_to_onyx
+def get_record(sample_id: str, columns: list) -> tuple[dict, int]:
+    """
+    Using unique sample ID, query Onyx database to get appropriate columns
+    """
+    # Ensure climb_id is included in columns list
+    if "climb_id" not in columns:
+        columns.append("climb_id")
+
+    with OnyxClient(config) as client:
+        df = pd.DataFrame(client.filter(project=args.server, climb_id=sample_id, include=columns))
+    exit_code = 0
+
+    # TODO: handle no records returned
+    return df, exit_code
+
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="fastq_read_stats",
-        description="Generates basic statistics given a fastq.gz as input",
+        description="Generates basic statistics given a CLIMB id input",
     )
 
-    parser.add_argument("input", help="Path to an input fastq.gz file")
+    parser.add_argument("-i", "--id", help="Sample ID.", required=True, type=str)
+    parser.add_argument(
+        "-c", "--columns", help="Columns from Onyx, should be comma seperated string.", required=True, type=str
+    )
+    parser.add_argument("-s", "--server", help="server - mscape, devscape, synthscape.", required=True, type=str)
+    parser.add_argument("-o", "--output", help="Output filepath.", required=True, type=Path)
+    args = parser.parse_args()
+    return args
 
-    return parser
 
-
-def main():
-    args = init_argparser().parse_args()
-
+def main() -> None:
+    args = get_args()
+    col_names = args.columns.split(",")
+    df, exit_code = get_record(args.id, col_names)
+    # drop climb id and parse for row 0 - col x 
     parse_seq_and_get_quality_stats(args.input)
 
 
