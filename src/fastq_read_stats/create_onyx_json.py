@@ -80,26 +80,6 @@ def get_args():
         required=False,
         help="Orange box version used to determine if should run.",
     )
-    # Add group options to specify onyx behaviour
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--store-onyx",
-        required=False,
-        action="store_true",
-        help="Use this option to store results as an onyx analysis object for later upload",
-    )
-    group.add_argument(
-        "--test-onyx",
-        required=False,
-        action="store_true",
-        help="Use this option to do a test upload and check for errors before attempting an upload to onyx",
-    )
-    group.add_argument(
-        "--prod-onyx",
-        required=False,
-        action="store_true",
-        help="Use this option to upload results to onyx",
-    )
 
     return parser.parse_args()
 
@@ -323,28 +303,12 @@ def main():
         return exitcode
 
     # Store analysis table info in json file
-    if args.store_onyx:
-        onyx_json_file = (
-            Path(args.output) / f"{args.climbid}.unclassified_readQC.analysis_fields.json"
-        )
-        result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
-        logging.info("Onyx analysis fields written to file %s", result_file)
-        exitcode = 0
-        return exitcode
-
-    # Test push data to onyx
-    if args.test_onyx:
-        result, exitcode = onyx_analysis.write_analysis_to_onyx(
-            server=args.server, dryrun=True, publish_analysis=False
-        )
-
-    # Push analysis table to onyx
-    if args.prod_onyx:
-        result, exitcode = onyx_analysis.write_analysis_to_onyx(
-            server=args.server, dryrun=False, publish_analysis=False
-        )
-
-    return exitcode
+    onyx_json_file = (
+        Path(args.output) / f"{args.climbid}.unclassified_readQC.analysis_fields.json"
+    )
+    result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
+    logging.info("Onyx analysis fields written to file %s", result_file)
+    exitcode = 0
 
 
 if __name__ == "__main__":
