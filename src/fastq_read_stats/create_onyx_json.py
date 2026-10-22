@@ -122,7 +122,7 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
     if len(unclass_data_files) > 2:
         raise ValueError("This script supports at most two input read QC files for paired-end runs")
 
-    dfs = []
+   # dfs = []
     per_read_results = {}
 
     for idx, file_path in enumerate(unclass_data_files):
@@ -131,7 +131,7 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
             raise FileNotFoundError(f"Read QC file not found: {p}")
 
         readqc = pd.read_csv(p, sep="\t")
-        dfs.append(readqc)
+       # dfs.append(readqc)
 
         stats = readqc.agg(
             {
@@ -149,27 +149,9 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
         label = f"read{idx+1}"
         per_read_results[label] = stats
 
-    # Combined summary across all provided files
-    if len(dfs) == 1:
-        combined = dfs[0]
-        logging.info("Processing single-end unclassified read QC file")
-    else:
-        combined = pd.concat(dfs, ignore_index=True)
-        logging.info("Processing paired-end unclassified read QC files (combined stats produced)")
-
-    combined_result = combined.agg(
-        {
-            "mean_phred_score": ["min", "max", "mean", "std", "median"],
-            "read_length": ["min", "max", "mean", "std", "median"],
-            "gc_content": ["min", "max", "mean", "std", "median"],
-            "compression_ratio": ["min", "max", "mean", "std", "median"],
-            "paired_base_complexity": ["min", "max", "mean", "std", "median"],
-        }
-    ).to_dict()
-    combined_result["unclassified_read_count"] = f'{int(combined.shape[0])} unclassified reads'
 
     # Build final dictionary: top-level combined stats plus per-read entries
-    result_dict = combined_result
+    result_dict = {}
     for k, v in per_read_results.items():
         result_dict[k] = v
 
@@ -219,7 +201,6 @@ def create_analysis_fields(
     _, onyx_versions, query_exitcode = oa.get_data_and_versions_from_onyx(
         sample_id=record_id, server=server, fields=["climb_id"]
     )
-    print(_, onyx_versions, query_exitcode)
 
     if query_exitcode == 0:
         # Add onyx versions and orange box version
@@ -230,7 +211,13 @@ def create_analysis_fields(
     else:
         methods_versions_fail = False
 
-    headline_result = unclassified_qc_results["unclassified_read_count"]
+    headline_result = unclassified_qc_results.get("unclassified_read_count")
+    if headline_result is None:
+        headline_result = sum(
+            int(v["unclassified_read_count"])
+            for k, v in unclassified_qc_results.items()
+                if k.startswith("read")
+        )
     print(headline_result)
     results_fail = onyx_analysis.add_results(
         top_result=headline_result, results_dict=unclassified_qc_results
@@ -303,12 +290,14 @@ def main():
         return exitcode
 
     # Store analysis table info in json file
+
     onyx_json_file = (
         Path(args.output) / f"{args.climbid}.unclassified_readQC.analysis_fields.json"
     )
     result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
     logging.info("Onyx analysis fields written to file %s", result_file)
     exitcode = 0
+
 
 
 if __name__ == "__main__":
