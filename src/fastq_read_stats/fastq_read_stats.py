@@ -5,19 +5,10 @@ import sys
 import argparse
 import functools
 import pyfastx
-import pandas as pd
-from pathlib import Path
 
 from functional import seq
 from typing import NamedTuple
 from collections import Counter
-from onyx import OnyxClient, OnyxConfig, OnyxEnv
-from onyx_analysis_helper import onyx_analysis_helper_functions as oa
-
-config = OnyxConfig(
-    domain=os.environ[OnyxEnv.DOMAIN],
-    token=os.environ[OnyxEnv.TOKEN],
-)
 
 __version__ = "0.2.0"
 
@@ -72,9 +63,11 @@ def phred_to_ratio(inputPhredScore: int) -> float:
     """
     return 10 ** ((-1 * inputPhredScore) / 10)
 
+
 @functools.cache
 def phred_ascii_to_ratio(inputPhredAsciiChar):
     return phred_to_ratio(phred_ascii_to_int(inputPhredAsciiChar))
+
 
 def get_gc_content(inputSequence: str) -> int | float:
     """
@@ -112,7 +105,7 @@ def get_paired_base_complexity(inputSequence: str) -> int | float:
     tends towards something sane as the length increases.
     """
     seqlen = len(inputSequence)
-    
+
     ## avoids a ZeroDivisionError
     if seqlen == 1:
         return 0
@@ -131,9 +124,7 @@ def get_quality_stats(input_seq_record) -> QualityStats:
 
     return_rec = QualityStats(
         read_id=read_id,
-        mean_phred_score=(
-            seq(list(quality)).map(phred_ascii_to_ratio).average()
-        ),
+        mean_phred_score=(seq(list(quality)).map(phred_ascii_to_ratio).average()),
         read_length=len(sequence),
         gc_content=get_gc_content(sequence.upper()),
         compression_ratio=get_compression_ratio(sequence),
@@ -161,6 +152,7 @@ def parse_seq_and_get_quality_stats(input_filepath: str) -> None:
         ## write out records
         sys.stdout.write("\t".join([base_filename, *[str(y) for y in rec]]))
         sys.stdout.write("\n")
+
 
 def init_argparser():
     parser = argparse.ArgumentParser(

@@ -40,7 +40,7 @@ def get_args():
         "-s",
         type=str,
         required=True,
-        choices=["mscape", "synthscape","devscape"],
+        choices=["mscape", "synthscape", "devscape"],
         help="Specify server code is being run on",
     )
     parser.add_argument(
@@ -120,9 +120,11 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
         raise ValueError("No read QC files provided")
 
     if len(unclass_data_files) > 2:
-        raise ValueError("This script supports at most two input read QC files for paired-end runs")
+        raise ValueError(
+            "This script supports at most two input read QC files for paired-end runs"
+        )
 
-   # dfs = []
+    # dfs = []
     per_read_results = {}
 
     for idx, file_path in enumerate(unclass_data_files):
@@ -131,7 +133,7 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
             raise FileNotFoundError(f"Read QC file not found: {p}")
 
         readqc = pd.read_csv(p, sep="\t")
-       # dfs.append(readqc)
+        # dfs.append(readqc)
 
         stats = readqc.agg(
             {
@@ -146,9 +148,8 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
         # per-file unclassified count
         stats["unclassified_read_count"] = int(readqc.shape[0])
         stats["unclassified_read_qc_table"] = file_path
-        label = f"r{idx+1}"
+        label = f"r{idx + 1}"
         per_read_results[label] = stats
-
 
     # Build final dictionary: top-level combined stats plus per-read entries
     result_dict = {}
@@ -175,8 +176,6 @@ def make_pipeline_dict(pipeline_str) -> dict:
     }
 
     return pipeline_dict
-
-
 
 
 def create_analysis_fields(
@@ -223,20 +222,25 @@ def create_analysis_fields(
     total_unclassified_reads = 0
 
     if "unclassified_read_count" in unclassified_qc_results:
-        total_unclassified_reads = get_count(unclassified_qc_results["unclassified_read_count"])
+        total_unclassified_reads = get_count(
+            unclassified_qc_results["unclassified_read_count"]
+        )
         headline_result = f"Total unclassified read count: {total_unclassified_reads}"
     else:
         if "r1" in unclassified_qc_results:
-            read1_count = get_count(unclassified_qc_results["r1"].get("unclassified_read_count", 0))
+            read1_count = get_count(
+                unclassified_qc_results["r1"].get("unclassified_read_count", 0)
+            )
         if "r2" in unclassified_qc_results:
-            read2_count = get_count(unclassified_qc_results["r2"].get("unclassified_read_count", 0))
+            read2_count = get_count(
+                unclassified_qc_results["r2"].get("unclassified_read_count", 0)
+            )
 
         total_unclassified_reads = read1_count + read2_count
 
         if read1_count and read2_count and read1_count == read2_count:
             headline_result = (
-                f"Total unclassified read count: "
-                f"(r1 = r2 = {read1_count})"
+                f"Total unclassified read count: (r1 = r2 = {read1_count})"
             )
         elif read1_count or read2_count:
             headline_result = (
@@ -244,7 +248,9 @@ def create_analysis_fields(
                 f"(r1 = {read1_count}, r2 = {read2_count})"
             )
         else:
-            headline_result = f"Total unclassified read count: {total_unclassified_reads}"
+            headline_result = (
+                f"Total unclassified read count: {total_unclassified_reads}"
+            )
 
     results_fail = onyx_analysis.add_results(
         top_result=headline_result,
@@ -279,7 +285,10 @@ def main():
     exitcode = 0
 
     # Set up log file
-    log_file = Path(args.output) / f"{args.climbid}.unclassified.readQC.analysis_fields.log.txt"
+    log_file = (
+        Path(args.output)
+        / f"{args.climbid}.unclassified.readQC.analysis_fields.log.txt"
+    )
     set_up_logger(log_file)
 
     orange_box_version = (
@@ -287,12 +296,10 @@ def main():
     )
 
     if args.readQC_result == "True":
-
         # Get information from unclassified read QC result files
         result_dict = get_unclassified_results(args.readQC_file)
 
     else:
-
         result_dict = {"unclassified_read_count": "No data - empty file"}
     # Convert pipeline info to dict
     pipeline_dict = make_pipeline_dict(args.pipeline_info)
@@ -321,7 +328,6 @@ def main():
     result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
     logging.info("Onyx analysis fields written to file %s", result_file)
     return 0
-
 
 
 if __name__ == "__main__":

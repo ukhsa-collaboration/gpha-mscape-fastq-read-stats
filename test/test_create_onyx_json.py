@@ -262,6 +262,7 @@ def test_create_analysis_fields_paired_end_headline_equal(monkeypatch):
     assert isinstance(analysis, FakeOnyxAnalysis)
     assert exitcode == 0
 
+
 def test_main_store_onyx_writes_json(monkeypatch, tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -330,16 +331,25 @@ def test_main_store_onyx_writes_json(monkeypatch, tmp_path):
     assert rc == 0
     out_json = output_dir / "SAMPLE_TEST.unclassified_readQC.analysis_fields.json"
     assert out_json.exists()
-    
+
+
 def test_get_args_parses_cli(monkeypatch):
     args = [
-        "--climbid", "SAMPLE1",
-        "--server", "devscape",
-        "--output", "/tmp/out",
-        "--pipeline_info", "pipe,1.0,https://example.com",
-        "--readQC_result", "True",
-        "--readQC_file", "a.tsv", "b.tsv",
-        "--context", "v1",
+        "--climbid",
+        "SAMPLE1",
+        "--server",
+        "devscape",
+        "--output",
+        "/tmp/out",
+        "--pipeline_info",
+        "pipe,1.0,https://example.com",
+        "--readQC_result",
+        "True",
+        "--readQC_file",
+        "a.tsv",
+        "b.tsv",
+        "--context",
+        "v1",
     ]
 
     monkeypatch.setattr("sys.argv", ["prog"] + args)
@@ -470,7 +480,11 @@ def test_create_analysis_fields_handles_nonzero_query_exit(monkeypatch):
         record_id="SAMPLE1",
         unclassified_qc_results=result_dict,
         server="devscape",
-        pipeline_info={"name": "pipe", "version": "1.0", "homePage": "https://example.com"},
+        pipeline_info={
+            "name": "pipe",
+            "version": "1.0",
+            "homePage": "https://example.com",
+        },
         orange_box_version="v1",
     )
 
@@ -516,15 +530,17 @@ def test_create_analysis_fields_handles_string_count(monkeypatch):
         lambda sample_id, server, fields: (None, {}, 0),
     )
 
-    result_dict = {
-        "unclassified_read_count": "12 reads"
-    }
+    result_dict = {"unclassified_read_count": "12 reads"}
 
     analysis, exitcode = qc.create_analysis_fields(
         record_id="SAMPLE1",
         unclassified_qc_results=result_dict,
         server="devscape",
-        pipeline_info={"name": "pipe", "version": "1.0", "homePage": "https://example.com"},
+        pipeline_info={
+            "name": "pipe",
+            "version": "1.0",
+            "homePage": "https://example.com",
+        },
         orange_box_version="v1",
     )
 
@@ -616,7 +632,9 @@ def test_main_creates_output_dir_if_missing(monkeypatch, tmp_path):
     rc = qc.main()
     assert rc == 0
     assert output_dir.exists()
-    assert (output_dir / "SAMPLE_OUTDIR.unclassified_readQC.analysis_fields.json").exists()
+    assert (
+        output_dir / "SAMPLE_OUTDIR.unclassified_readQC.analysis_fields.json"
+    ).exists()
 
 
 def test_make_pipeline_dict_rejects_bad_string():
