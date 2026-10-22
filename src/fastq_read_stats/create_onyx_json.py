@@ -145,8 +145,8 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
 
         # per-file unclassified count
         stats["unclassified_read_count"] = int(readqc.shape[0])
-
-        label = f"read{idx+1}"
+        stats["unclassified_read_qc_table"] = file_path
+        label = f"r{idx+1}"
         per_read_results[label] = stats
 
 
@@ -177,6 +177,8 @@ def make_pipeline_dict(pipeline_str) -> dict:
     return pipeline_dict
 
 
+
+
 def create_analysis_fields(
     record_id: str,
     unclassified_qc_results: dict,
@@ -186,52 +188,74 @@ def create_analysis_fields(
 ) -> tuple[oa.OnyxAnalysis, int]:
     onyx_analysis = oa.OnyxAnalysis()
     onyx_analysis.add_analysis_details(
-        analysis_name="gpha-mscape-fastq-read-stats-nf",
+        analysis_name="unclassified-read-qc",
         analysis_description="This is an analysis to perform read QC for unclassified reads",
     )
-    onyx_analysis.pipeline_name = pipeline_info["name"]
-    onyx_analysis.pipeline_version = pipeline_info["version"]
-    onyx_analysis.pipeline_url = pipeline_info["homePage"]
+    onyx_analysis.pipeline_name = pipeline_info["name"].strip()
+    onyx_analysis.pipeline_version = pipeline_info["version"].strip()
+    onyx_analysis.pipeline_url = pipeline_info["homePage"].strip()
     onyx_analysis.outputs = "No s3 outputs"  # ty:ignore[invalid-assignment]
-    # Add settings and onyx analysis hash
-    methods_fail = onyx_analysis.add_methods(
-        methods_dict={}
-    )
+
+    methods_fail = onyx_analysis.add_methods(methods_dict={})
 
     _, onyx_versions, query_exitcode = oa.get_data_and_versions_from_onyx(
         sample_id=record_id, server=server, fields=["climb_id"]
     )
 
     if query_exitcode == 0:
-        # Add onyx versions and orange box version
         methods_versions_fail = onyx_analysis.add_versions_to_methods(
             tool_versions={"orange_box_version": orange_box_version},
-            onyx_versions=onyx_versions,  # onyx versions hash automatically generated
+            onyx_versions=onyx_versions,
         )
     else:
         methods_versions_fail = False
 
-    headline_result = unclassified_qc_results.get("unclassified_read_count")
-    if headline_result is None:
-        headline_result = sum(
-            int(v["unclassified_read_count"])
-            for k, v in unclassified_qc_results.items()
-                if k.startswith("read")
-        )
-    print(headline_result)
+    def get_count(value):
+        if value is None:
+            return 0
+        if isinstance(value, str):
+            digits = "".join(ch for ch in value if ch.isdigit())
+            return int(digits) if digits else 0
+        return int(value)
+
+    read1_count = 0
+    read2_count = 0
+    total_unclassified_reads = 0
+
+    if "unclassified_read_count" in unclassified_qc_results:
+        total_unclassified_reads = get_count(unclassified_qc_results["unclassified_read_count"])
+        headline_result = f"Total unclassified read count: {total_unclassified_reads}"
+    else:
+        if "r1" in unclassified_qc_results:
+            read1_count = get_count(unclassified_qc_results["r1"].get("unclassified_read_count", 0))
+        if "r2" in unclassified_qc_results:
+            read2_count = get_count(unclassified_qc_results["r2"].get("unclassified_read_count", 0))
+
+        total_unclassified_reads = read1_count + read2_count
+
+        if read1_count and read2_count and read1_count == read2_count:
+            headline_result = (
+                f"Total unclassified read count: "
+                f"(r1 = r2 = {read1_count})"
+            )
+        elif read1_count or read2_count:
+            headline_result = (
+                f"Total unclassified read count: {total_unclassified_reads} "
+                f"(r1 = {read1_count}, r2 = {read2_count})"
+            )
+        else:
+            headline_result = f"Total unclassified read count: {total_unclassified_reads}"
+
     results_fail = onyx_analysis.add_results(
-        top_result=headline_result, results_dict=unclassified_qc_results
+        top_result=headline_result,
+        results_dict=unclassified_qc_results,
     )
-    print(results_fail)
+
     onyx_analysis.add_server_records(sample_id=record_id, server_name=server)
     required_field_fail, attribute_fail = onyx_analysis.check_analysis_object(
         publish_analysis=False
     )
-    print(methods_fail,
-            methods_versions_fail,
-            results_fail,
-            required_field_fail,
-            attribute_fail)
+
     if any(
         [
             methods_fail,
@@ -240,7 +264,7 @@ def create_analysis_fields(
             required_field_fail,
             attribute_fail,
         ]
-    ):  # noqa SIM108
+    ):
         exitcode = 1
     else:
         exitcode = 0
@@ -296,7 +320,7 @@ def main():
     )
     result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
     logging.info("Onyx analysis fields written to file %s", result_file)
-    exitcode = 0
+    return 0
 
 
 
