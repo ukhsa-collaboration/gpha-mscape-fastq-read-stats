@@ -150,11 +150,7 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
         label = f"r{idx + 1}"
         per_read_results[label] = stats
 
-    result_dict = {}
-    for k, v in per_read_results.items():
-        result_dict[k] = v
-
-    return result_dict
+    return per_read_results
 
 
 def make_pipeline_dict(pipeline_str) -> dict:
