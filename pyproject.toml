@@ -8,8 +8,9 @@ dynamic = ["version"]
 authors = [{ name = "Ashley Shalloe", email = "ashley.shalloe@ukhsa.gov.uk" }]
 description = "Generates basic statistics given a fastq.gz as input"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["pyfunctional>=1.5.0", "pytest>=8.2.2", "pyfastx>=2.2.0"]
+requires-python = ">=3.12"
+dependencies = ["pyfunctional>=1.5.0", "pytest>=8.2.2", "pyfastx>=2.2.0","pyyaml>=6.0.3","pandas>=3.0.6","climb-onyx-client>=4.10.0","typing_extensions>=4.16.0","asttokens>=3.0.2",
+"onyx-analysis-helper@git+https://github.com/ukhsa-collaboration/onyx-analysis-helper.git@v0.6.7",]
 
 [project.urls]
 Homepage = "https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats"
@@ -18,6 +19,7 @@ Issues = "https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats/is
 [project.scripts]
 fastq_read_stats = "fastq_read_stats.fastq_read_stats:main"
 fastq_read_statsMP = "fastq_read_stats.fastq_read_statsMP:main"
+create_onyx_json = "fastq_read_stats.create_onyx_json:main"
 
 [tool.setuptools.dynamic]
 version = { attr = "fastq_read_stats.fastq_read_stats.__version__" }

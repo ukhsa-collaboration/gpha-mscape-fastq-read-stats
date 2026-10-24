@@ -43,8 +43,22 @@ with gzip.open("input.fastq.gz", "rt") as infile:
 Which returns something like:
 
 ```python
-QualityStats(read_id='SRR32793206.1', mean_phred_score=0.05724021314818394, read_length=43, gc_content=0.4883720930232558, compression_ratio=1.1627906976744187, paired_base_complexity=0.6904761904761905)
-QualityStats(read_id='SRR32793206.2', mean_phred_score=0.05154328183292301, read_length=119, gc_content=0.44537815126050423, compression_ratio=0.6554621848739496, paired_base_complexity=0.7288135593220338)
+QualityStats(
+    read_id="SRR32793206.1",
+    mean_phred_score=0.05724021314818394,
+    read_length=43,
+    gc_content=0.4883720930232558,
+    compression_ratio=1.1627906976744187,
+    paired_base_complexity=0.6904761904761905,
+)
+QualityStats(
+    read_id="SRR32793206.2",
+    mean_phred_score=0.05154328183292301,
+    read_length=119,
+    gc_content=0.44537815126050423,
+    compression_ratio=0.6554621848739496,
+    paired_base_complexity=0.7288135593220338,
+)
 ```
 
 ## What do these stats mean?

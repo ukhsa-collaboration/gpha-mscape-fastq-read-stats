@@ -8,10 +8,12 @@ def test_phred_to_ratio():
     assert fqrs.phred_to_ratio(30) == 0.001
     assert fqrs.phred_to_ratio(40) == 0.0001
 
+
 def test_get_gc_content():
     assert fqrs.get_gc_content("GGGAAA") == 0.5
     assert fqrs.get_gc_content("G") == 1
     assert fqrs.get_gc_content("AAAAAA") == 0
+
 
 def test_get_compression_ratio():
     """
@@ -20,6 +22,7 @@ def test_get_compression_ratio():
     be identical
     """
     assert fqrs.get_compression_ratio("A" * 9001) < 1
+
 
 def test_get_paired_base_complexity():
     assert fqrs.get_paired_base_complexity("AAAA") == 0
