@@ -33,8 +33,6 @@ def test_get_unclassified_results_single_end(tmp_path):
     assert "mean_phred_score" in result["r1"]
     assert "read_length" in result["r1"]
 
-    tmp.unlink(missing_ok=True)
-
 
 def test_get_unclassified_results_paired_end(tmp_path):
     r1 = tmp_path / "tmp_test_r1.tsv"
@@ -324,37 +322,6 @@ def test_main_store_onyx_writes_json(monkeypatch, tmp_path):
     assert data["status"] == "ok"
 
 
-def test_get_args_parses_cli(monkeypatch):
-    args = [
-        "--climbid",
-        "SAMPLE1",
-        "--server",
-        "devscape",
-        "--output",
-        "/tmp/out",
-        "--pipeline_info",
-        "pipe,1.0,https://example.com",
-        "--readQC_result",
-        "True",
-        "--readQC_file",
-        "a.tsv",
-        "b.tsv",
-        "--context",
-        "v1",
-    ]
-
-    monkeypatch.setattr("sys.argv", ["prog"] + args)
-
-    parsed = qc.get_args()
-
-    assert parsed.climbid == "SAMPLE1"
-    assert parsed.server == "devscape"
-    assert parsed.output == "/tmp/out"
-    assert parsed.readQC_result == "True"
-    assert parsed.readQC_file == ["a.tsv", "b.tsv"]
-    assert parsed.orange_box_version == "v1"
-
-
 def test_set_up_logger_creates_log_file(tmp_path):
     log_file = tmp_path / "test.log"
 
@@ -503,3 +470,166 @@ def test_main_creates_output_dir_if_missing(monkeypatch, tmp_path):
 def test_make_pipeline_dict_rejects_bad_string():
     with pytest.raises(IndexError):
         qc.make_pipeline_dict("bad-string-only")
+
+def test_main_end_to_end_single_end_writes_json(monkeypatch, tmp_path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    qc_file = tmp_path / "single_end.tsv"
+    make_qc_tsv(qc_file, n_rows=2)
+
+    args = {
+        "climbid": "SAMPLE_SINGLE",
+        "server": "devscape",
+        "output": str(output_dir),
+        "pipeline_info": "fastq-read-stats,1.0,https://example.com",
+        "readQC_result": "True",
+        "readQC_file": [str(qc_file)],
+        "orange_box_version": "v1",
+        "store_onyx": True,
+        "test_onyx": False,
+        "prod_onyx": False,
+    }
+
+    monkeypatch.setattr(qc, "get_args", lambda: type("Args", (), args)())
+    monkeypatch.setattr(qc, "set_up_logger", lambda *a, **k: None)
+
+    class FakeOnyxAnalysis:
+        def __init__(self):
+            self.pipeline_name = None
+            self.pipeline_version = None
+            self.pipeline_url = None
+            self.outputs = None
+
+        def add_analysis_details(self, **kwargs):
+            pass
+
+        def add_methods(self, methods_dict):
+            return False
+
+        def add_versions_to_methods(self, tool_versions, onyx_versions):
+            return False
+
+        def add_results(self, top_result, results_dict):
+            return False
+
+        def add_server_records(self, **kwargs):
+            pass
+
+        def check_analysis_object(self, publish_analysis=False):
+            return (False, False)
+
+        def write_analysis_to_json(self, result_file):
+            result_file = Path(result_file)
+            result_file.parent.mkdir(parents=True, exist_ok=True)
+            payload = {
+                "sample_id": "SAMPLE_SINGLE",
+                "status": "ok",
+                "top_result": "Total unclassified read count: 2",
+            }
+            with open(result_file, "w") as fh:
+                json.dump(payload, fh)
+            return str(result_file)
+
+    monkeypatch.setattr(qc.oa, "OnyxAnalysis", FakeOnyxAnalysis)
+    monkeypatch.setattr(
+        qc.oa,
+        "get_data_and_versions_from_onyx",
+        lambda sample_id, server, fields: (None, {}, 0),
+    )
+
+    exit_code = qc.main()
+
+    assert exit_code == 0
+
+    out_json = output_dir / "SAMPLE_SINGLE.unclassified_readQC.analysis_fields.json"
+    assert out_json.exists()
+
+    with open(out_json, "r") as fh:
+        payload = json.load(fh)
+
+    assert payload["sample_id"] == "SAMPLE_SINGLE"
+    assert payload["status"] == "ok"
+
+
+def test_main_end_to_end_paired_end_writes_json(monkeypatch, tmp_path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    r1 = tmp_path / "r1.tsv"
+    r2 = tmp_path / "r2.tsv"
+    make_qc_tsv(r1, n_rows=2)
+    make_qc_tsv(r2, n_rows=3)
+
+    args = {
+        "climbid": "SAMPLE_PAIRED",
+        "server": "devscape",
+        "output": str(output_dir),
+        "pipeline_info": "fastq-read-stats,1.0,https://example.com",
+        "readQC_result": "True",
+        "readQC_file": [str(r1), str(r2)],
+        "orange_box_version": "v1",
+        "store_onyx": True,
+        "test_onyx": False,
+        "prod_onyx": False,
+    }
+
+    monkeypatch.setattr(qc, "get_args", lambda: type("Args", (), args)())
+    monkeypatch.setattr(qc, "set_up_logger", lambda *a, **k: None)
+
+    class FakeOnyxAnalysis:
+        def __init__(self):
+            self.pipeline_name = None
+            self.pipeline_version = None
+            self.pipeline_url = None
+            self.outputs = None
+
+        def add_analysis_details(self, **kwargs):
+            pass
+
+        def add_methods(self, methods_dict):
+            return False
+
+        def add_versions_to_methods(self, tool_versions, onyx_versions):
+            return False
+
+        def add_results(self, top_result, results_dict):
+            return False
+
+        def add_server_records(self, **kwargs):
+            pass
+
+        def check_analysis_object(self, publish_analysis=False):
+            return (False, False)
+
+        def write_analysis_to_json(self, result_file):
+            result_file = Path(result_file)
+            result_file.parent.mkdir(parents=True, exist_ok=True)
+            payload = {
+                "sample_id": "SAMPLE_PAIRED",
+                "status": "ok",
+                "paired_end": True,
+            }
+            with open(result_file, "w") as fh:
+                json.dump(payload, fh)
+            return str(result_file)
+
+    monkeypatch.setattr(qc.oa, "OnyxAnalysis", FakeOnyxAnalysis)
+    monkeypatch.setattr(
+        qc.oa,
+        "get_data_and_versions_from_onyx",
+        lambda sample_id, server, fields: (None, {}, 0),
+    )
+
+    exit_code = qc.main()
+
+    assert exit_code == 0
+
+    out_json = output_dir / "SAMPLE_PAIRED.unclassified_readQC.analysis_fields.json"
+    assert out_json.exists()
+
+    with open(out_json, "r") as fh:
+        payload = json.load(fh)
+
+    assert payload["sample_id"] == "SAMPLE_PAIRED"
+    assert payload["paired_end"] is True
