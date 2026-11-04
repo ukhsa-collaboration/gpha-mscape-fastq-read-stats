@@ -15,6 +15,8 @@ import pandas as pd
 from onyx import OnyxConfig, OnyxEnv
 from onyx_analysis_helper import onyx_analysis_helper_functions as oa
 
+logger = logging.getLogger(__name__)
+
 # Set up onyx config
 CONFIG = OnyxConfig(
     domain=os.environ[OnyxEnv.DOMAIN],
@@ -300,7 +302,7 @@ def main():
 
     # Exit if analysis object not made correctly
     if exitcode == 1:
-        logging.error(
+        logger.error(
             "Invalid attribute in analysis fields submitted, check logs for details"
         )
         return exitcode
@@ -311,7 +313,7 @@ def main():
         Path(args.output) / f"{args.climbid}.unclassified_readQC.analysis_fields.json"
     )
     result_file = onyx_analysis.write_analysis_to_json(result_file=onyx_json_file)
-    logging.info("Onyx analysis fields written to file %s", result_file)
+    logger.info("Onyx analysis fields written to file %s", result_file)
     return 0
 
 
