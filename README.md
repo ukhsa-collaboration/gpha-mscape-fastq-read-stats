@@ -2,17 +2,18 @@
 
 ## What is this?
 
-An argparse tool that generates basic statistics given a fastq.gz as input.
+An argparse tool that generates basic statistics given a fastq.gz as input and can create a json analysis table for ingest into onyx via create_onyx_json.py. 
 
 ## How do I use this?
 
+### 1. fastq_read_stats
 After pip installing, you can run it directly from the commandline:
 
 ```bash
-fastq_read_stats input.fastq.gz
+fastq_read_stats input.fastq.gz > input.fastq.stats
 ```
 
-Which returns something like:
+Which returns something like in the output table:
 
 ```
 input_filename  read_id mean_phred_score        read_length     gc_content      compression_ratio       paired_base_complexity
@@ -59,8 +60,30 @@ QualityStats(
     compression_ratio=0.6554621848739496,
     paired_base_complexity=0.7288135593220338,
 )
+
+```
+### 2. create_onyx_json
+A simple script to generate onyx analysis fields from unclassified read QC results. It reads in the table and generates some summary statistics for the unclassified reads for storage in the analysis table. 
+
+```bash
+create_onyx_json -c C-349DKE90 -s mscape -o output_dir -p 'pipeline name, version, homepage' -r True -c orange_box_version
 ```
 
+Example Output
+```
+identifiers
+name"gpha-mscape-fastq-read-stats-nf"
+description"This is an analysis to perform read QC for unclassified reads"
+analysis_date"2026-10-19"
+pipeline_name"gpha-mscape-fastq-read-stats-nf"
+pipeline_version" v1.5.0"
+pipeline_url" https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats-nf"
+outputs"No s3 outputs"
+methods"{"unclassified_version": "1.0", "onyx_versions_hash": "53e3c51ec1c1c40047d8329f720f7e18d9f093367b955603b713c9dc2919e66c", "versions": [{"name": "classifier_version", "version": "2.1.2"}, {"name": "classifier_db_date", "version": "2026-02-26"}, {"name": "ncbi_taxonomy_date", "version": "2026-03-01"}, {"name": "scylla_version", "version": "v2.3.0"}, {"name": "sylph_db_version", "version": "gtdb-r232-c200-dbv1"}, {"name": "alignment_db_version", "version": "0.4.0"}, {"name": "orange_box_version", "version": "True"}]}"
+result 4855
+result_metrics"{"mean_phred_score": {"min": 0.012, "max": 0.12, "mean": 0.06, "std": 0.028, "median": 0.052}, "read_length": {"min": 253.0, "max": 5513.0, "mean": 2573.0469618949537, "std": 699.6761743315348, "median": 2508.0}, "gc_content": {"min": 0.273, "max": 0.642, "mean": 0.447, "std": 0.093, "median": 0.446}, "compression_ratio": {"min": 0.263, "max": 0.490, "mean": 0.334, "std": 0.012, "median": 0.33}, "paired_base_complexity": {"min": 0.611, "max": 0.795, "mean": 0.731, "std": 0.029, "median": 0.730}, "unclassified_read_count": 4855}"
+
+```
 ## What do these stats mean?
 
 | Field                  | Definition                                                                                                                                                                                         | Format |
