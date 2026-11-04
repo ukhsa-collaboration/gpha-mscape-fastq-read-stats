@@ -144,6 +144,15 @@ def get_unclassified_results(unclass_data_files: List[Path]) -> dict:
             }
         ).to_dict()
 
+        # Round each aggregated statistic to three decimal places.
+        stats = {
+            column: {
+                stat_name: round(value, 3) if pd.notna(value) else value
+                for stat_name, value in stat_values.items()
+            }
+            for column, stat_values in stats.items()
+        }
+        
         # per-file unclassified count
         stats["unclassified_read_count"] = int(readqc.shape[0])
         stats["unclassified_read_qc_table"] = file_path
