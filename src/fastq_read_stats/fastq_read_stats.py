@@ -2,6 +2,7 @@
 import argparse
 import functools
 import gzip
+import itertools
 import os
 import sys
 from collections import Counter
@@ -110,7 +111,7 @@ def get_paired_base_complexity(inputSequence: str) -> int | float:
     if seqlen == 1:
         return 0
 
-    return seq(zip(inputSequence, inputSequence[1:])).map(
+    return seq(itertools.pairwise(inputSequence)).map(
         lambda x: x[0] != x[1]
     ).sum() / (seqlen - 1)
 
