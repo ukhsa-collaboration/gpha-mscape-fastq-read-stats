@@ -1,4 +1,3 @@
-import pytest
 import fastq_read_stats.fastq_read_stats as fqrs
 
 

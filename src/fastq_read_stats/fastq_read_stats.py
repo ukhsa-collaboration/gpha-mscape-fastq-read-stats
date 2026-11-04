@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-import os
-import gzip
-import sys
 import argparse
 import functools
-import pyfastx
-
-from functional import seq
-from typing import NamedTuple
+import gzip
+import os
+import sys
 from collections import Counter
+from typing import NamedTuple
+
+import pyfastx
+from functional import seq
 
 __version__ = "0.2.0"
 

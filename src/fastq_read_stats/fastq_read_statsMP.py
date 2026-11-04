@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from fastq_read_stats import *
 from multiprocessing import Process, Queue
+
+from fastq_read_stats import *
 
 
 def parse_seq_and_get_quality_stats(input_filepath: str) -> None:

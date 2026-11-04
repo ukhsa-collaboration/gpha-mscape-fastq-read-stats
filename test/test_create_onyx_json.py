@@ -472,7 +472,6 @@ def test_make_pipeline_dict_rejects_bad_string():
         qc.make_pipeline_dict("bad-string-only")
 
 
-
 def test_get_unclassified_results_rounds_stats_to_three_decimal_places(tmp_path):
     qc_file = tmp_path / "readqc.tsv"
 
@@ -496,7 +495,8 @@ def test_get_unclassified_results_rounds_stats_to_three_decimal_places(tmp_path)
     assert stats["paired_base_complexity"]["mean"] == 4.012
     assert stats["unclassified_read_count"] == 2
     assert stats["unclassified_read_qc_table"] == qc_file
-    
+
+
 def test_main_end_to_end_single_end_writes_json(monkeypatch, tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
