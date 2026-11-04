@@ -1,6 +1,6 @@
 # Changelog
 
-v0.3.0 - November 2026
+v1.0.0 - November 2026
 
 # Added
 - Function to round summary statisitcs in analysis table to 3 decimal places
