@@ -471,6 +471,32 @@ def test_make_pipeline_dict_rejects_bad_string():
     with pytest.raises(IndexError):
         qc.make_pipeline_dict("bad-string-only")
 
+
+
+def test_get_unclassified_results_rounds_stats_to_three_decimal_places(tmp_path):
+    qc_file = tmp_path / "readqc.tsv"
+
+    pd.DataFrame(
+        {
+            "mean_phred_score": [30.123456, 31.234567],
+            "read_length": [100.123456, 200.234567],
+            "gc_content": [45.123456, 55.234567],
+            "compression_ratio": [1.234567, 2.345678],
+            "paired_base_complexity": [3.456789, 4.567891],
+        }
+    ).to_csv(qc_file, sep="\t", index=False)
+
+    result = qc.get_unclassified_results([qc_file])
+    stats = result["r1"]
+
+    assert stats["mean_phred_score"]["mean"] == 30.679
+    assert stats["read_length"]["mean"] == 150.179
+    assert stats["gc_content"]["mean"] == 50.179
+    assert stats["compression_ratio"]["mean"] == 1.79
+    assert stats["paired_base_complexity"]["mean"] == 4.012
+    assert stats["unclassified_read_count"] == 2
+    assert stats["unclassified_read_qc_table"] == qc_file
+    
 def test_main_end_to_end_single_end_writes_json(monkeypatch, tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
