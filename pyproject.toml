@@ -18,7 +18,7 @@ Issues = "https://github.com/ukhsa-collaboration/gpha-mscape-fastq-read-stats/is
 
 [project.scripts]
 fastq_read_stats = "fastq_read_stats.fastq_read_stats:main"
-fastq_read_statsMP = "fastq_read_stats.fastq_read_statsMP:main"
+fastq_read_stats_mp = "fastq_read_stats.fastq_read_stats_mp:main"
 create_onyx_json = "fastq_read_stats.create_onyx_json:main"
 
 [tool.setuptools.dynamic]

@@ -60,13 +60,12 @@ QualityStats(
     compression_ratio=0.6554621848739496,
     paired_base_complexity=0.7288135593220338,
 )
-
 ```
 ### 2. create_onyx_json
 A simple script to generate onyx analysis fields from unclassified read QC results. It reads in the table and generates some summary statistics for the unclassified reads for storage in the analysis table. 
 
 ```bash
-create_onyx_json -c C-349DKE90 -s mscape -o output_dir -p 'pipeline name, version, homepage' -r True -c orange_box_version
+create_onyx_json -i C-FAKEID -s mscape -o output_dir -p 'pipeline name, version, homepage' -r True -c orange_box_version -f C-FAKEID.stats
 ```
 
 Example Output
